@@ -1,9 +1,10 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const pool = require("../db");
 
 dotenv.config();
+
+const pool = require("../db");
 
 const app = express();
 
@@ -14,9 +15,25 @@ app.get("/", (req, res) => {
   res.status(200).json({ message: "Solar backend running successfully" });
 });
 
+app.get("/api/test-db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.status(200).json({
+      message: "Database connected successfully",
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error("DB test error:", error);
+    res.status(500).json({
+      message: "Database connection failed",
+      error: error.message
+    });
+  }
+});
+
 app.post("/api/contact", async (req, res) => {
   try {
-    const { name, phone, email, title, category, message, submitted_at, source } = req.body;
+    const { name, phone, email, title, category, message, source } = req.body;
 
     if (!name || !phone || !email || !title || !category || !message) {
       return res.status(400).json({ message: "All required fields must be filled" });
@@ -24,8 +41,8 @@ app.post("/api/contact", async (req, res) => {
 
     const query = `
       INSERT INTO contact_messages
-      (name, phone, email, title, category, message, submitted_at, source)
-      VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, CURRENT_TIMESTAMP), $8)
+      (name, phone, email, title, category, message, source)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `;
 
@@ -36,7 +53,6 @@ app.post("/api/contact", async (req, res) => {
       title,
       category,
       message,
-      submitted_at || null,
       source || "website"
     ];
 
@@ -48,7 +64,10 @@ app.post("/api/contact", async (req, res) => {
     });
   } catch (error) {
     console.error("POST /api/contact error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message
+    });
   }
 });
 
@@ -64,7 +83,10 @@ app.get("/api/admin/contact-messages", async (req, res) => {
     });
   } catch (error) {
     console.error("GET /api/admin/contact-messages error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message
+    });
   }
 });
 
@@ -87,7 +109,10 @@ app.get("/api/admin/contact-messages/:id", async (req, res) => {
     });
   } catch (error) {
     console.error("GET single message error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message
+    });
   }
 });
 
@@ -119,7 +144,10 @@ app.put("/api/admin/contact-messages/:id", async (req, res) => {
     });
   } catch (error) {
     console.error("PUT message error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message
+    });
   }
 });
 
@@ -142,7 +170,10 @@ app.delete("/api/admin/contact-messages/:id", async (req, res) => {
     });
   } catch (error) {
     console.error("DELETE message error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message
+    });
   }
 });
 
